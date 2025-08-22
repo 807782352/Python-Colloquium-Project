@@ -29,3 +29,9 @@ def ensure_user(user_id, users):
             if u.get("user_id") == user_id:
                 return User.from_dict(u)
     return None
+
+
+from datetime import datetime
+def parse_date(d):
+    """Parse a date string in 'YYYY-MM-DD' format to a date object."""
+    return datetime.strptime(d, "%Y-%m-%d").date()

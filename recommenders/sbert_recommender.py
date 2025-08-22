@@ -223,11 +223,42 @@ class SbertRecommender:
 
         user_budget = float(user.budget)
 
+        # Filter further based on availability (date range)
+        from utils.utils import parse_date
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        # Today's date in Toronto timezone
+        tz = ZoneInfo("America/Toronto")
+        today = datetime.now(tz).date()
+        period_days = int(getattr(user, "period", 0) or 0)
+
         # Filter all properties that is under the budget
         mask_i = []
         for i, prop in enumerate(self.properties):
-            if float(prop.get("price_per_night")) <= user_budget:
+            # Price filtering
+            try:
+                price_ok = float(prop.get("price_per_night")) <= user_budget
+            except Exception:
+                price_ok = False
+
+            # Filter periods: period_days <= (ending_date - max(today, starting_date)).days
+            try:
+                start_d = parse_date(prop.get("starting_date"))  # format: YYYY-MM-DD
+                end_d = parse_date(prop.get("ending_date"))
+
+                earliest_start = max(today, start_d)  # if starting date is in the past, use today
+                available_days = (end_d - earliest_start).days
+
+                availability_ok = available_days >= period_days
+            except Exception:
+                availability_ok = False
+
+            if price_ok and availability_ok:
                 mask_i.append(i)
+
+        if not mask_i:
+            return []
 
         user_vector = self.embed_to_vector([user_text])[0]
 
@@ -252,7 +283,7 @@ class SbertRecommender:
                     "location": self.properties[idx]["location"],
                     "type": self.properties[idx]["type"],
                     "features": self.properties[idx]["features"],
-                    "tags": self.properties[idx]["tags"],   
+                    "tags": self.properties[idx]["tags"],
                     "starting_date": self.properties[idx]["starting_date"],
                     "ending_date": self.properties[idx]["ending_date"],
                     "coordinates": self.properties[idx]["coordinates"],
@@ -272,7 +303,7 @@ if __name__ == "__main__":
         "preferred_environment": ["Europe", "Ocean", "Luxury"],
         "budget": "500",
     }
-    
+
     # User.from_dict(user)
 
     init_embeddings_to_sqlite()

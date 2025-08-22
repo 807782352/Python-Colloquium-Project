@@ -54,13 +54,14 @@ if "map_version" not in st.session_state:
     st.session_state.map_version = 0
 
 # ====================== HELPERS (GLOBAL) ======================
-_CANON_KEYS = {"user_id", "name", "group_size", "budget", "preferred_environment", "password_hash"}
+
 
 def fmt_money(x):
     try:
         return f"${float(x):,.0f}"
     except Exception:
         return str(x)
+
 
 def as_dict_any(u):
     """Make a dict from user; drop private (_*) attrs and backfill common fields."""
@@ -72,12 +73,21 @@ def as_dict_any(u):
         except Exception:
             d = {}
         # Backfill common fields from attributes if present
-        for k in ["user_id", "name", "group_size", "budget", "preferred_environment", "preferred_environemnts", "password_hash"]:
+        for k in [
+            "user_id",
+            "name",
+            "group_size",
+            "budget",
+            "period",
+            "preferred_environment",
+            "password_hash",
+        ]:
             if k not in d and hasattr(u, k):
                 d[k] = getattr(u, k)
     # Drop private keys (underscore-prefixed)
     d = {k: v for k, v in d.items() if not str(k).startswith("_")}
     return d
+
 
 def canonicalize_user_dict(d: dict) -> dict:
     """Normalize keys/types; handle typos; dedupe tags; keep only canonical keys."""
@@ -104,6 +114,12 @@ def canonicalize_user_dict(d: dict) -> dict:
     except Exception:
         canon["budget"] = 0.0
 
+    # period -> int
+    try:
+        canon["period"] = int(out.get("period", 1))
+    except Exception:
+        canon["period"] = 1
+
     # preferred_environment -> list[str], clean + dedupe (case-insensitive)
     pe = out.get("preferred_environment", [])
     if isinstance(pe, str):
@@ -124,6 +140,7 @@ def canonicalize_user_dict(d: dict) -> dict:
         canon["password_hash"] = out["password_hash"]
 
     return canon
+
 
 def ensure_attr_user(u_dict_or_obj):
     """
@@ -164,6 +181,7 @@ def ensure_attr_user(u_dict_or_obj):
     except Exception:
         return SimpleNamespace(**d)
 
+
 def save_users_to_json(updated_user_obj_or_dict):
     """Persist canonical fields only to datasets/users.json."""
     project_root = Path(__file__).resolve().parents[1]
@@ -172,7 +190,9 @@ def save_users_to_json(updated_user_obj_or_dict):
     payload = canonicalize_user_dict(as_dict_any(updated_user_obj_or_dict))
 
     if not users_path.exists():
-        st.info("Profile updated in session. (datasets/users.json not found — skipped file save)")
+        st.info(
+            "Profile updated in session. (datasets/users.json not found — skipped file save)"
+        )
         return
 
     try:
@@ -205,6 +225,7 @@ def save_users_to_json(updated_user_obj_or_dict):
     except Exception as e:
         st.warning(f"Profile updated in session, but failed to write file: {e}")
 
+
 # ====================== SIDEBAR: USER PROFILE (VIEW/EDIT) ======================
 with st.sidebar:
     # Pre-clear: clean input after last Enter-add (must run BEFORE widgets are created)
@@ -214,7 +235,14 @@ with st.sidebar:
 
     # Pre-clear: deferred cleanup when Cancel was pressed previously
     if st.session_state.get("_reset_edit_ui_pending", False):
-        for k in ("edit_tags", "new_tag_text", "edit_name", "edit_group", "edit_budget"):
+        for k in (
+            "edit_tags",
+            "new_tag_text",
+            "edit_name",
+            "edit_group",
+            "edit_period",
+            "edit_budget",
+        ):
             st.session_state.pop(k, None)
         st.session_state["_reset_edit_ui_pending"] = False
 
@@ -232,24 +260,32 @@ with st.sidebar:
     # ===== VIEW MODE =====
     if not st.session_state.editing_profile:
         st.markdown("### 👤 User Profile")
-        st.markdown('<div class="gr8-card profile-card">', unsafe_allow_html=True)
         st.markdown(
             f"""
-            <div class="row" style="gap:12px;">
+            <div class="row gr8-card" style="gap:12px;">
               <div>
                 <div class="profile-name">{u_dict.get('name','User')}</div>
                 <div class="profile-sub">@{u_dict.get('user_id','user')}</div>
               </div>
             </div>
-            <hr/>
-            <p><b>Group Size:</b> {u_dict.get('group_size','—')}</p>
-            <p><b>Budget:</b> {fmt_money(u_dict.get('budget','—'))}</p>
+            
             """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(
+            f"""<hr/>
+            <p><b>Group Size:</b> {u_dict.get('group_size','—')}</p>
+            <p><b>Budget (per night):</b> {fmt_money(u_dict.get('budget','—'))}</p>
+            <p><b>Stay Period:</b> {(u_dict.get('period','—'))} day(s)</p>""",
             unsafe_allow_html=True,
         )
         if prefs:
             chips = " ".join(f"<span class='gr8-chip'>{p}</span>" for p in prefs)
-            st.markdown(f"<p><b>Preferred Environments:</b></p><div>{chips}</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<p><b>Preferred Environments:</b></p><div>{chips}</div>",
+                unsafe_allow_html=True,
+            )
         st.markdown("</div>", unsafe_allow_html=True)
 
         if st.button("✏️ Modify"):
@@ -271,12 +307,26 @@ with st.sidebar:
         # Text and numeric inputs (unique keys preserve widget state)
         name_in = st.text_input("Name", value=u_dict.get("name", ""), key="edit_name")
         group_in = st.number_input(
-            "Group Size", min_value=1, max_value=99, step=1,
-            value=int(u_dict.get("group_size", 1)), key="edit_group"
+            "Group Size",
+            min_value=1,
+            max_value=99,
+            step=1,
+            value=int(u_dict.get("group_size", 1)),
+            key="edit_group",
         )
         budget_in = st.number_input(
-            "Budget (per trip / per night)", min_value=0.0, step=50.0,
-            value=float(u_dict.get("budget", 0.0)), key="edit_budget"
+            "Budget (per trip / per night)",
+            min_value=0.0,
+            step=50.0,
+            value=float(u_dict.get("budget", 0.0)),
+            key="edit_budget",
+        )
+        period_in = st.number_input(
+            "Period you plan to stay (days)",
+            min_value=1,
+            step=1,
+            value=int(u_dict.get("period", 1)),
+            key="edit_period",
         )
 
         # Chip editor: show selected tags with remove (×) buttons
@@ -291,7 +341,9 @@ with st.sidebar:
                 col = cols[i % len(cols)]
                 with col:
                     # Button + text inline
-                    rm = st.button(f"✕ {tag}", key=f"rm_tag_{i}", help="Remove this tag")
+                    rm = st.button(
+                        f"✕ {tag}", key=f"rm_tag_{i}", help="Remove this tag"
+                    )
                     if rm:
                         st.session_state.edit_tags.pop(i)
                         st.rerun()
@@ -321,13 +373,16 @@ with st.sidebar:
             cancel_clicked = st.button("↩️ Cancel")
 
         if save_clicked:
-            updated_dict = canonicalize_user_dict({
-                **u_dict,
-                "name": (name_in or "User").strip(),
-                "group_size": int(st.session_state.get("edit_group", group_in)),
-                "budget": float(st.session_state.get("edit_budget", budget_in)),
-                "preferred_environment": st.session_state.edit_tags or [],
-            })
+            updated_dict = canonicalize_user_dict(
+                {
+                    **u_dict,
+                    "name": (name_in or "User").strip(),
+                    "group_size": int(st.session_state.get("edit_group", group_in)),
+                    "budget": float(st.session_state.get("edit_budget", budget_in)),
+                    "period": int(st.session_state.get("edit_period", period_in)),
+                    "preferred_environment": st.session_state.edit_tags or [],
+                }
+            )
 
             # Recommender-ready: return a class instance or SimpleNamespace
             updated_obj = ensure_attr_user(updated_dict)
@@ -347,16 +402,19 @@ with st.sidebar:
             st.session_state["_reset_edit_ui_pending"] = True
             st.rerun()
 
+
 # ====================== RECOMMENDER ======================
 @st.cache_resource
 def get_recommender():
     from recommenders.sbert_recommender import SbertRecommender
+
     project_root = Path(__file__).resolve().parents[1]
     prop_file = project_root / "datasets" / "sample_property_listings.json"
     with open(prop_file, "r", encoding="utf-8") as f:
         data = json.load(f)
     properties = data.get("properties", data if isinstance(data, list) else [])
     return SbertRecommender(properties)
+
 
 recommender = get_recommender()
 
@@ -369,11 +427,24 @@ st.markdown("## 🔎 Recommended for you", help="Based on your profile preferenc
 # ====================== TOP FILTERS ======================
 col_topn, col_price, col_kw = st.columns([1, 1, 2], vertical_alignment="bottom")
 with col_topn:
-    top_n = st.slider("Top N", min_value=3, max_value=30, value=9, step=3, key="kw_topn")
+    top_n = st.slider(
+        "Top N", min_value=3, max_value=30, value=9, step=3, key="kw_topn"
+    )
 with col_price:
     price_label = st.selectbox(
         "Max price per night",
-        options=["No limit", "$100", "$200", "$300", "$500", "$800", "$1000"],
+        options=[
+            "No limit",
+            "$100",
+            "$200",
+            "$300",
+            "$500",
+            "$800",
+            "$1000",
+            "$1500",
+            "$2000",
+            "$3000",
+        ],
         index=0,
         key="kw_price",
     )
@@ -385,6 +456,9 @@ with col_price:
         "$500": 500,
         "$800": 800,
         "$1000": 1000,
+        "$1500": 1500,
+        "$2000": 2000,
+        "$3000": 3000,
     }[price_label]
 with col_kw:
     keyword = (
@@ -407,6 +481,7 @@ except Exception as e:
     st.info("Tip: Clear filters (No limit / empty keyword) or inspect user fields.")
     raw_recs = []
 
+
 def price_ok(p, cap):
     if cap is None:
         return True
@@ -415,6 +490,7 @@ def price_ok(p, cap):
         return float(price) <= float(cap)
     except Exception:
         return True
+
 
 def kw_ok(p, kw):
     if not kw:
@@ -430,11 +506,13 @@ def kw_ok(p, kw):
             bag += [str(x).lower() for x in v]
     return kw in " ".join(bag)
 
+
 filtered = [p for p in raw_recs if price_ok(p, price_cap) and kw_ok(p, keyword)]
 items = filtered[:top_n]
 
 # ====================== MAP ======================
 st.markdown("### 🗺️ Map of results")
+
 
 def _extract_point(p):
     c = p.get("coordinates", {}) or {}
@@ -447,6 +525,7 @@ def _extract_point(p):
     except Exception:
         return None, None
 
+
 # Build marker payloads (with tooltip/popup)
 points = []
 for i, prop in enumerate(items, start=1):
@@ -454,10 +533,16 @@ for i, prop in enumerate(items, start=1):
     if lat is None or lng is None:
         continue
 
-    title = prop.get("name") or prop.get("title") or prop.get("property_id", f"Property #{i}")
+    title = (
+        prop.get("name")
+        or prop.get("title")
+        or prop.get("property_id", f"Property #{i}")
+    )
     loc = prop.get("location", "—")
     typ = prop.get("type", "—")
     price_val = prop.get("price_per_night", prop.get("price", "—"))
+    starting_date = prop.get("starting_date", "—")
+    ending_date = prop.get("ending_date", "—")
     try:
         price_txt = f"${float(price_val):,.0f} / night"
     except Exception:
@@ -479,6 +564,8 @@ for i, prop in enumerate(items, start=1):
       <div>📍 <b>Location:</b> {loc}</div>
       <div>🏠 <b>Type:</b> {typ}</div>
       <div>💲 <b>Price:</b> {price_txt}</div>
+      <div>📅 <b>Available from:</b> {starting_date}</div>
+      <div>⏳ <b>Until:</b> {ending_date}</div>
       <div style="margin-top:6px;">{chips_html}</div>
     </div>
     """
@@ -497,30 +584,35 @@ for i, prop in enumerate(items, start=1):
     )
 
 if not points:
-    st.info("No coordinates available for the current results. Try clearing filters or increasing Top N.")
+    st.info(
+        "No coordinates available for the current results. Try clearing filters or increasing Top N."
+    )
 else:
     # Initial center: average coordinates (fit_bounds will handle final view)
     avg_lat = sum(p["lat"] for p in points) / len(points)
     avg_lng = sum(p["lng"] for p in points) / len(points)
-    WORLD_BOUNDS = [[-85, -180], [85, 180]]  # Slight margin to avoid polar tile artifacts
+    WORLD_BOUNDS = [
+        [-85, -180],
+        [85, 180],
+    ]  # Slight margin to avoid polar tile artifacts
 
     m = folium.Map(
-        location=[avg_lat, avg_lng],   # Initial center
-        zoom_start=2,                  # Initial zoom
-        min_zoom=1,                    # Allow world view
+        location=[avg_lat, avg_lng],  # Initial center
+        zoom_start=2,  # Initial zoom
+        min_zoom=1,  # Allow world view
         max_zoom=12,
-        tiles=None,                    # Add TileLayer manually to control no_wrap
-        max_bounds=True,               # Constrain panning to bounds
+        tiles=None,  # Add TileLayer manually to control no_wrap
+        max_bounds=True,  # Constrain panning to bounds
         max_bounds_viscosity=1.0,
-        world_copy_jump=False,         # Do not duplicate world at ±180°
+        world_copy_jump=False,  # Do not duplicate world at ±180°
         prefer_canvas=True,
     )
 
     folium.TileLayer(
         tiles="CartoDB Positron",
         control=False,
-        no_wrap=True,                 # Disable tile wrapping
-        bounds=WORLD_BOUNDS,          # Limit tile rendering to these bounds
+        no_wrap=True,  # Disable tile wrapping
+        bounds=WORLD_BOUNDS,  # Limit tile rendering to these bounds
     ).add_to(m)
 
     # Cluster layer to handle overlapping markers
@@ -531,7 +623,7 @@ else:
             "spiderfyOnEveryZoom": False,
             "spiderfyOnMaxZoom": True,
             "disableClusteringAtZoom": 10,  # Stop clustering at zoom ≥ 10
-            "maxClusterRadius": 60,         # Pixel radius for clustering
+            "maxClusterRadius": 60,  # Pixel radius for clustering
         }
     ).add_to(m)
 
@@ -554,6 +646,22 @@ else:
 
     # Render (use versioned key to force remount after profile save)
     st_folium(
-        m, height=560, use_container_width=True,
-        key=f"rec_map_cluster_v{st.session_state.get('map_version', 0)}"
+        m,
+        height=560,
+        use_container_width=True,
+        key=f"rec_map_cluster_v{st.session_state.get('map_version', 0)}",
+    )
+
+    st.markdown(
+        """
+    <div class="gr8-card" style="margin-top:12px;">
+    <div style="font-weight:700; margin-bottom:6px;">🧭 How to read this map</div>
+    <ol style="margin:0; padding-left:18px; line-height:1.6;">
+        <li><b style="color:#2563eb;">Blue numbered pins</b>: The number shows the <b>priority/rank</b> of the property (1 = highest).</li>
+        <li><b style="color:#16a34a;">Green cluster markers</b>: Indicate that <b>multiple properties</b> are located in that area. The number shows how many. Click or zoom in to expand.</li>
+        <li>Click any marker to view the <b>property details</b> (price, type, availability, tags, etc.).</li>
+    </ol>
+    </div>
+    """,
+        unsafe_allow_html=True,
     )

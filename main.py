@@ -28,41 +28,6 @@ PROPERTIES_FILE = os.path.abspath(
 
 _RECOMMENDER = None  # Placeholder for the recommender instance
 
-# def load_users(users_file):
-#     """
-#     Load users from a JSON file.
-#     Returns a list of user dictionaries.
-#     """
-#     if not os.path.exists(users_file):
-#         return []
-#     with open(users_file, 'r') as f:
-#         try:
-#             return json.load(f)
-#         except json.JSONDecodeError:
-#             return []
-
-# def save_users(users, users_file):
-#     """
-#     Save users to a JSON file.
-#     user: user dictionaries.
-#     """
-#     with open(users_file, 'w') as f:
-#         json.dump([u for u in users], f, indent=4)
-
-# def ensure_user(user_id, users):
-#     """
-#     Ensure a user exists in the users list by user_id.
-#     """
-#     for u in users:
-#         if isinstance(u, User):
-#             if u.user_id == user_id:
-#                 return u
-#         elif isinstance(u, dict):
-#             if u.get("user_id") == user_id:
-#                 return User.from_dict(u)
-#     return None
-
-
 def login(user, raw_password, users, max_attempts=3):
     """
     Handle user login.
@@ -106,7 +71,8 @@ def sign_up():
     preferred_environment = [
         pref.strip() for pref in pref_input.split(",") if pref.strip()
     ]
-    budget = input("Enter Budget: ")
+    budget = input("Enter Budget (per night): ")
+    period = input("Enter Period in day(s): ")
 
     password = input("Create Password: ").strip()
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
@@ -117,6 +83,7 @@ def sign_up():
         "group_size": group_size,
         "preferred_environment": preferred_environment,
         "budget": budget,
+        "period": period,
         "password_hash": hashed_password,
     }
 
@@ -227,6 +194,10 @@ def recommend_properties_by_preferences(user, top_k=3):
 
 # --- Show Properties with Appealing Descriptions ---
 def show_properties_with_descriptions(properties, user):
+    if not properties:
+        print("No properties found matching your preferences.")
+        return
+    
     print("\nRecommended Properties:")
     for prop in properties:
         description = generate_property_description(prop, user)
@@ -522,7 +493,8 @@ def view_user_profile(user, users):
     print(f"Name:                 {user.name}")
     print(f"Group Size:           {user.group_size}")
     print(f"Preferred Environment:{', '.join(user.preferred_environment)}")
-    print(f"Budget:               {user.budget}")
+    print(f"Budget(per night):               {user.budget}")
+    print(f"Period:               {user.period} day(s)")
     print("*" * 30 + "\n")
 
 
@@ -551,12 +523,16 @@ def edit_user_profile(user, users):
 
     budget_input = input(f"Budget ({user.budget}): ")
     budget = budget_input or user.budget
+    
+    period_input = input(f"Period in days ({user.period}): ")
+    period = period_input or user.period
 
     # Update the user object
     user.name = name
     user.group_size = group_size
     user.preferred_environment = preferred_environment
     user.budget = budget
+    user.period = period
 
     for i, u in enumerate(users):
         if u.get("user_id") == user.user_id:
