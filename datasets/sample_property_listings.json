@@ -1,0 +1,308 @@
+{
+  "properties":[
+  {
+    "property_id": "P00001",
+    "location": "Sydney, Australia - Coastal, Urban",
+    "type": "Harbour Apartment",
+    "price_per_night": 108,
+    "features": [
+      "Pet Friendly",
+      "Mountain View",
+      "Smart TV",
+      "Heating",
+      "Gym"
+    ],
+    "tags": [
+      "budget",
+      "skiing",
+      "wellness",
+      "adventure",
+      "nightlife",
+      "family",
+      "historic",
+      "hiking"
+    ],
+    "coordinates": {
+      "latitude": -33.827057,
+      "longitude": 151.279095
+    },
+    "starting_date": "2025-09-03",
+    "ending_date": "2025-12-20"
+  },
+  {
+    "property_id": "P00002",
+    "location": "Sydney, Australia - Coastal, Urban",
+    "type": "Harbour Apartment",
+    "price_per_night": 456,
+    "features": [
+      "Kitchen",
+      "Parking",
+      "Rooftop Access",
+      "Heating",
+      "Hammock",
+      "Pool",
+      "Breakfast Included",
+      "Balcony",
+      "Garden"
+    ],
+    "tags": [
+      "business",
+      "shopping",
+      "family",
+      "nature",
+      "nightlife",
+      "secluded",
+      "hiking",
+      "foodie"
+    ],
+    "coordinates": {
+      "latitude": -33.884328,
+      "longitude": 151.185441
+    },
+    "starting_date": "2025-09-11",
+    "ending_date": "2025-10-28"
+  },
+  {
+    "property_id": "P00003",
+    "location": "Toronto, Canada - Urban, City",
+    "type": "Downtown Apartment",
+    "price_per_night": 366,
+    "features": [
+      "Breakfast Included",
+      "Private Beach",
+      "BBQ Grill",
+      "Mountain View",
+      "Balcony",
+      "Rooftop Access",
+      "Hammock",
+      "Garden",
+      "Sauna"
+    ],
+    "tags": [
+      "skiing",
+      "historic",
+      "family",
+      "wellness",
+      "romantic",
+      "nature",
+      "hiking",
+      "shopping"
+    ],
+    "coordinates": {
+      "latitude": 43.646514,
+      "longitude": -79.429738
+    },
+    "starting_date": "2025-10-06",
+    "ending_date": "2025-11-25"
+  },
+  {
+    "property_id": "P00004",
+    "location": "Kyoto, Japan - Historic, Cultural",
+    "type": "Traditional Ryokan",
+    "price_per_night": 497,
+    "features": [
+      "Gym",
+      "Kitchen",
+      "Garden",
+      "WiFi",
+      "Private Beach",
+      "Pet Friendly",
+      "Smart TV"
+    ],
+    "tags": [
+      "family",
+      "business",
+      "eco-friendly",
+      "secluded",
+      "adventure",
+      "romantic"
+    ],
+    "coordinates": {
+      "latitude": 35.060001,
+      "longitude": 135.746
+    },
+    "starting_date": "2025-08-31",
+    "ending_date": "2025-12-03"
+  },
+  {
+    "property_id": "P00005",
+    "location": "Banff, Canada - Mountain, Cold",
+    "type": "Mountain Cabin",
+    "price_per_night": 324,
+    "features": [
+      "Parking",
+      "BBQ Grill",
+      "Rooftop Access",
+      "WiFi",
+      "Breakfast Included",
+      "Sauna"
+    ],
+    "tags": [
+      "secluded",
+      "shopping",
+      "family",
+      "nightlife",
+      "nature",
+      "adventure"
+    ],
+    "coordinates": {
+      "latitude": 51.203238,
+      "longitude": -115.538974
+    },
+    "starting_date": "2025-09-19",
+    "ending_date": "2026-01-14"
+  },
+  {
+    "property_id": "P00006",
+    "location": "Kyoto, Japan - Historic, Cultural",
+    "type": "Traditional Ryokan",
+    "price_per_night": 445,
+    "features": [
+      "WiFi",
+      "Balcony",
+      "Gym",
+      "BBQ Grill",
+      "Pool",
+      "Breakfast Included",
+      "Fireplace"
+    ],
+    "tags": [
+      "romantic",
+      "skiing",
+      "eco-friendly",
+      "hiking",
+      "luxury",
+      "adventure",
+      "foodie",
+      "historic"
+    ],
+    "coordinates": {
+      "latitude": 34.991071,
+      "longitude": 135.701448
+    },
+    "starting_date": "2025-08-29",
+    "ending_date": "2025-11-12"
+  },
+  {
+    "property_id": "P00007",
+    "location": "Kyoto, Japan - Historic, Cultural",
+    "type": "Traditional Ryokan",
+    "price_per_night": 231,
+    "features": [
+      "Pet Friendly",
+      "Balcony",
+      "Private Beach",
+      "Kitchen",
+      "WiFi",
+      "BBQ Grill",
+      "Gym",
+      "Garden",
+      "Hammock"
+    ],
+    "tags": [
+      "historic",
+      "luxury",
+      "shopping",
+      "nightlife",
+      "wellness",
+      "cultural",
+      "hiking",
+      "nature"
+    ],
+    "coordinates": {
+      "latitude": 34.989893,
+      "longitude": 135.790527
+    },
+    "starting_date": "2025-10-09",
+    "ending_date": "2025-12-07"
+  },
+  {
+    "property_id": "P00008",
+    "location": "Marrakech, Morocco - Desert, Hot",
+    "type": "Riad",
+    "price_per_night": 135,
+    "features": [
+      "Smart TV",
+      "Kitchen",
+      "Fireplace",
+      "Mountain View",
+      "Private Beach",
+      "BBQ Grill"
+    ],
+    "tags": [
+      "family",
+      "hiking",
+      "luxury",
+      "wellness",
+      "eco-friendly"
+    ],
+    "coordinates": {
+      "latitude": 31.663629,
+      "longitude": -7.984067
+    },
+    "starting_date": "2025-10-01",
+    "ending_date": "2025-11-24"
+  },
+  {
+    "property_id": "P00009",
+    "location": "Zurich, Switzerland - Mountain, Lake",
+    "type": "Lakeview Chalet",
+    "price_per_night": 480,
+    "features": [
+      "Rooftop Access",
+      "Sauna",
+      "Air Conditioning",
+      "Private Beach",
+      "Balcony",
+      "Fireplace",
+      "WiFi",
+      "Hammock",
+      "Pet Friendly"
+    ],
+    "tags": [
+      "business",
+      "family",
+      "beachfront",
+      "secluded",
+      "skiing"
+    ],
+    "coordinates": {
+      "latitude": 47.319325,
+      "longitude": 8.515935
+    },
+    "starting_date": "2025-09-09",
+    "ending_date": "2026-01-01"
+  },
+  {
+    "property_id": "P00010",
+    "location": "Zurich, Switzerland - Mountain, Lake",
+    "type": "Lakeview Chalet",
+    "price_per_night": 550,
+    "features": [
+      "Sauna",
+      "Laundry Service",
+      "Kitchen",
+      "Air Conditioning",
+      "Garden",
+      "Pool",
+      "Rooftop Access"
+    ],
+    "tags": [
+      "cultural",
+      "business",
+      "skiing",
+      "eco-friendly",
+      "nightlife",
+      "romantic",
+      "shopping",
+      "wellness"
+    ],
+    "coordinates": {
+      "latitude": 47.368789,
+      "longitude": 8.440458
+    },
+    "starting_date": "2025-12-11",
+    "ending_date": "2026-01-26"
+  }
+]
+}

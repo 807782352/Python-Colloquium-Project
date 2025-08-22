@@ -1,50 +1,61 @@
 [
-    {
-        "user_id": "manav_01",
-        "name": "Manav",
-        "group_size": "10",
-        "preferred_environment": [
-            "Mountain Cabin",
-            "Cozy Huts",
-            "Forest",
-            "Mangroove Forest"
-        ],
-        "budget": "200",
-        "password": "77981306d2e60bcff5e16d2b693d322cd25833d03a548134f20d5cd113f14cbc"
-    },
-    {
-        "user_id": "sunny_02",
-        "name": "Sunny",
-        "group_size": 4,
-        "preferred_environment": "Beach Resort",
-        "budget": 300,
-        "password": "77981306d2e60bcff5e16d2b693d322cd25833d03a548134f20d5cd113f14cbc"
-    },
-    {
-        "user_id": "catherine_03",
-        "name": "Catherine Smith",
-        "group_size": 1,
-        "preferred_environment": "Urban Apartment",
-        "budget": 120,
-        "password": "aed0b4fb5604033a18ae04b58e7fbd0553de2cb3f24742e6f607a006b0f52045"
-    },
-    {
-        "user_id": "david_04",
-        "name": "David Brown",
-        "group_size": 3,
-        "preferred_environment": "Countryside Farmhouse",
-        "budget": 200,
-        "password": "885137091e0861bb8dd254e1c684c3d00a57f0e22399cb9d76b9a153787b5d52"
-    },
-    {
-        "user_id": "emily_05",
-        "name": "Emily Davis",
-        "group_size": 5,
-        "preferred_environment": [
-            "Toronto",
-            "Hills"
-        ],
-        "budget": "120",
-        "password": "ba78ef1b08582a45a66dbd906122435202ae9744604a23a9124d5fe761b062e6"
-    }
+  {
+    "user_id": "manav_01",
+    "name": "Manav",
+    "group_size": "10",
+    "preferred_environment": [
+      "Mountain Cabin",
+      "Cozy Huts",
+      "Forest",
+      "Mangroove Forest"
+    ],
+    "budget": "200",
+    "password": "77981306d2e60bcff5e16d2b693d322cd25833d03a548134f20d5cd113f14cbc"
+  },
+  {
+    "user_id": "sunny_02",
+    "name": "Sunny",
+    "group_size": 4,
+    "preferred_environment": "Beach Resort",
+    "budget": 300,
+    "password": "77981306d2e60bcff5e16d2b693d322cd25833d03a548134f20d5cd113f14cbc"
+  },
+  {
+    "user_id": "catherine_03",
+    "name": "Catherine Smith",
+    "group_size": 1,
+    "preferred_environment": "Urban Apartment",
+    "budget": 120,
+    "password": "aed0b4fb5604033a18ae04b58e7fbd0553de2cb3f24742e6f607a006b0f52045"
+  },
+  {
+    "user_id": "david_04",
+    "name": "David Brown",
+    "group_size": 3,
+    "preferred_environment": "Countryside Farmhouse",
+    "budget": 200,
+    "password": "885137091e0861bb8dd254e1c684c3d00a57f0e22399cb9d76b9a153787b5d52"
+  },
+  {
+    "user_id": "emily_05",
+    "name": "Emily Davis",
+    "group_size": 5,
+    "preferred_environment": [
+      "Toronto",
+      "Hills"
+    ],
+    "budget": "120",
+    "password": "ba78ef1b08582a45a66dbd906122435202ae9744604a23a9124d5fe761b062e6"
+  },
+  {
+    "user_id": "kyrie63",
+    "name": "Ziyi Xu",
+    "group_size": 10,
+    "budget": 1300.0,
+    "preferred_environment": [
+      "Cold",
+      "Morocco"
+    ],
+    "password_hash": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"
+  }
 ]

@@ -10,11 +10,10 @@ import os
 BASE_DIR = os.path.dirname(__file__)
 # Path to the property listings JSON file (robust to script location)
 PROPERTIES_FILE = os.path.abspath(
-    os.path.join(BASE_DIR, "..", "datasets", "property_listings.json")
+    os.path.join(BASE_DIR, "..", "datasets", "sample_property_listings.json")
 )
 # Path to save the SQLite database (always in the Vector embeddings folder)
 SQLITE_DB_FILE = os.path.abspath(os.path.join(BASE_DIR, "property_vector_db.sqlite"))
-
 
 MODEL_DIR = os.path.join(os.path.join(BASE_DIR, "sbert_models"), "saved_model")
 
@@ -254,6 +253,9 @@ class SbertRecommender:
                     "type": self.properties[idx]["type"],
                     "features": self.properties[idx]["features"],
                     "tags": self.properties[idx]["tags"],   
+                    "starting_date": self.properties[idx]["starting_date"],
+                    "ending_date": self.properties[idx]["ending_date"],
+                    "coordinates": self.properties[idx]["coordinates"],
                 }
             )
         return results
@@ -270,6 +272,8 @@ if __name__ == "__main__":
         "preferred_environment": ["Europe", "Ocean", "Luxury"],
         "budget": "500",
     }
+    
+    # User.from_dict(user)
 
     init_embeddings_to_sqlite()
 

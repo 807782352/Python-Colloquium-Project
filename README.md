@@ -35,6 +35,26 @@ Python-Colloquium-Project/
 
 ---
 
+## Ways to run project
+
+Run the project in either **CLI** (console) or **GUI** (Streamlit) mode from a single entrypoint.
+
+### Modes
+- **CLI mode**: plain Python console
+- **GUI mode**: Streamlit app (in a separate `app.py`)
+
+### Usage
+
+# Launch GUI (Streamlit)
+python main.py --mode gui
+
+# Launch CLI
+python main.py --mode cli
+
+# Auto mode (default): prefer CLI in TTY, GUI otherwise
+python main.py
+
+
 ## Logic and Flow
 
 ### 1. User Management
