@@ -214,3 +214,19 @@ Property ID: P00123 | Similarity: 0.82
 ```
 
 Note: Do `pip install -r requirements.txt` under the root to install relavant modules before running the code!
+
+
+
+---
+## Acknowledgments
+
+Parts of the initial code framework were generated with the assistance of AI tools, including GitHub Copilot and ChatGPT.  
+However, the overall system design, logic development, code review, and subsequent modifications were entirely performed by the project team members.
+
+
+
+## References
+
+- Reimers, Nils, and Iryna Gurevych. *Sentence Transformers: Compute Embeddings*. SBERT.net, https://sbert.net/examples/sentence_transformer/applications/computing-embeddings/README.html. Accessed 26 Aug. 2025.
+
+- "Sentence Transformers Tutorial." *YouTube*, uploaded by HuggingFace, 14 May 2021, https://www.youtube.com/watch?app=desktop&v=nZ5j289WN8g. Accessed 26 Aug. 2025.
