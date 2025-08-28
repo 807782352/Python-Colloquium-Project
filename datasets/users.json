@@ -191,5 +191,20 @@
         ],
         "budget": 1,
         "password": "5afab9a620f6f11284505be2fb9a975b4dccfdd30970dffc7ed875490160e4d0"
+    },
+    {
+        "user_id": "kyrie",
+        "name": "Ziyi",
+        "group_size": 5,
+        "preferred_environment": [
+            "Toronto",
+            "Water"
+        ],
+        "budget": 300,
+        "password": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+        "saved_property": [
+            "P00059",
+            "P00063"
+        ]
     }
 ]

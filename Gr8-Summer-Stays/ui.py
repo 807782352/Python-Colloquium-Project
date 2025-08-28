@@ -104,7 +104,7 @@ def recommended_properties_page():
     # Use SBERT recommender for personalized recommendations
     import sys
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'recommenders')))
-    from sbert_recommender import recommend_properties_from_db
+    from recommenders.sbert_recommender import recommend_properties_from_db
     user = st.session_state.user
     recommended = recommend_properties_from_db(user, top_n=n)
     for i, prop in enumerate(recommended):
@@ -117,6 +117,9 @@ def recommended_properties_page():
             if st.button(f"Save Property {prop['property_id']}", key=f"save_{i}"):
                 save_property_for_user(st.session_state.user['user_id'], prop['property_id'])
                 st.success("Property saved!")
+            coords = pd.DataFrame([prop['coordinates']]).rename(columns={"lat": "latitude", "lng": "longitude"})
+            st.map(coords)
+        
 
 # Show saved properties
 def saved_properties_page():

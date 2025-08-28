@@ -1,109 +1,92 @@
 def recommend_properties_from_db(user, top_n=5, db_file=None, model_dir=None):
     """
     Recommend properties using precomputed embeddings in the SQLite DB, based on user preferences.
+    Includes price_per_night and coordinates; filters by user budget if provided.
     """
     from sentence_transformers import SentenceTransformer, util
     import numpy as np
     import sqlite3
-    import json
-    # Use default paths if not provided
+    import os
+
+    # Database and model directories
     if db_file is None:
         db_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "property_vector_db.sqlite"))
     if model_dir is None:
         model_dir = os.path.join(os.path.dirname(__file__), "sbert_models", "saved_model")
-    # Load model
+
+    # Load the SBERT model
     model = SentenceTransformer(model_dir)
-    # Compose user query
-    preferred_env = user.get("preferred_environment", [])
+
+    preferred_env = user.get("preferred_environment", []) or []
     user_text = "preferred_environment: " + ", ".join(preferred_env)
     user_vector = model.encode([user_text], convert_to_numpy=True).astype(np.float32)[0]
-    # Connect to DB
+
+    # user's budget
+    user_budget = None
+    try:
+        if user.get("budget") is not None:
+            user_budget = float(user["budget"])
+    except (TypeError, ValueError):
+        user_budget = None
+
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
-    c.execute("SELECT property_id, embedding, location, type, features, tags FROM property_embeddings")
+    ensure_table(conn)  # 迁移老表，避免 SELECT 报错
+    c.execute("""
+        SELECT property_id, embedding, location, type, features, tags, price_per_night, lat, lng
+        FROM property_embeddings
+    """)
     rows = c.fetchall()
     conn.close()
-    properties = []
-    embeddings = []
-    for row in rows:
-        property_id, embedding_blob, location, type_, features, tags = row
+
+    properties, embeddings = [], []
+    for (property_id, embedding_blob, location, type_, features, tags, price, lat, lng) in rows:
+        # budget filtering
+        if user_budget is not None and price is not None:
+            try:
+                if float(price) > user_budget:
+                    continue
+            except (TypeError, ValueError):
+                pass
+
         emb = np.frombuffer(embedding_blob, dtype=np.float32)
         properties.append({
             "property_id": property_id,
             "location": location,
             "type": type_,
             "features": features.split(",") if features else [],
-            "tags": tags.split(",") if tags else []
+            "tags": tags.split(",") if tags else [],
+            "price_per_night": float(price) if price is not None else None,
+            "coordinates": {
+                "lat": float(lat) if lat is not None else None,
+                "lng": float(lng) if lng is not None else None,
+            }
         })
         embeddings.append(emb)
+
     if not embeddings:
         return []
+
     property_vectors = np.stack(embeddings)
     similarities = util.cos_sim(user_vector, property_vectors)[0]
     order = np.argsort(-similarities)[:top_n]
+
     results = []
     for i in order:
         prop = properties[i]
         results.append({
             "property_id": prop["property_id"],
             "similarity": float(similarities[i]),
-            "price_per_night": None,  # Add price if available from JSON
+            "price_per_night": prop["price_per_night"],
             "location": prop["location"],
             "type": prop["type"],
             "features": prop["features"],
-            "tags": prop["tags"]
+            "tags": prop["tags"],
+            "coordinates": prop["coordinates"],
         })
     return results
-    """
-    Recommend properties using precomputed embeddings in the SQLite DB, based on user preferences.
-    """
-    from sentence_transformers import SentenceTransformer, util
-    import numpy as np
-    import sqlite3
-    import json
-    # Load model
-    model = SentenceTransformer(model_dir)
-    # Compose user query
-    preferred_env = user.get("preferred_environment", [])
-    user_text = "preferred_environment: " + ", ".join(preferred_env)
-    user_vector = model.encode([user_text], convert_to_numpy=True).astype(np.float32)[0]
-    # Connect to DB
-    conn = sqlite3.connect(db_file)
-    c = conn.cursor()
-    c.execute("SELECT property_id, embedding, location, type, features, tags FROM property_embeddings")
-    rows = c.fetchall()
-    conn.close()
-    properties = []
-    embeddings = []
-    for row in rows:
-        property_id, embedding_blob, location, type_, features, tags = row
-        emb = np.frombuffer(embedding_blob, dtype=np.float32)
-        properties.append({
-            "property_id": property_id,
-            "location": location,
-            "type": type_,
-            "features": features.split(",") if features else [],
-            "tags": tags.split(",") if tags else []
-        })
-        embeddings.append(emb)
-    if not embeddings:
-        return []
-    property_vectors = np.stack(embeddings)
-    similarities = util.cos_sim(user_vector, property_vectors)[0]
-    order = np.argsort(-similarities)[:top_n]
-    results = []
-    for i in order:
-        prop = properties[i]
-        results.append({
-            "property_id": prop["property_id"],
-            "similarity": float(similarities[i]),
-            "price_per_night": None,  # Add price if available from JSON
-            "location": prop["location"],
-            "type": prop["type"],
-            "features": prop["features"],
-            "tags": prop["tags"]
-        })
-    return results
+
+
 # This script loads property listings, generates embeddings, and stores them in a vector database for later querying.
 
 from sentence_transformers import SentenceTransformer, util
@@ -185,8 +168,7 @@ def init_embeddings_to_sqlite(model=None, db_file=SQLITE_DB_FILE):
 
 def ensure_table(conn):
     """
-    Ensure the property_embeddings table exists in the SQLite database.
-    Otherwise, create it.
+    Ensure table exists and migrate missing columns (price_per_night, lat, lng).
     """
     c = conn.cursor()
     c.execute(
@@ -197,58 +179,72 @@ def ensure_table(conn):
             location    TEXT,
             type        TEXT,
             features    TEXT,
-            tags        TEXT
+            tags        TEXT,
+            price_per_night REAL,
+            lat REAL,
+            lng REAL
         )
-    """
+        """
     )
     conn.commit()
+
+    # # migrate: old table missing columns
+    # c.execute("PRAGMA table_info(property_embeddings)")
+    # cols = {row[1] for row in c.fetchall()}
+    # alters = []
+    # if "price_per_night" not in cols:
+    #     alters.append("ALTER TABLE property_embeddings ADD COLUMN price_per_night REAL")
+    # if "lat" not in cols:
+    #     alters.append("ALTER TABLE property_embeddings ADD COLUMN lat REAL")
+    # if "lng" not in cols:
+    #     alters.append("ALTER TABLE property_embeddings ADD COLUMN lng REAL")
+    # for stmt in alters:
+    #     c.execute(stmt)
+    # if alters:
+    #     conn.commit()
+
 
 
 def add_properties(new_props, model, db_file=SQLITE_DB_FILE):
     """
-    Generic function to add new properties (or single property) to the SQLite database.
-    new_prop: dict, e.g. {"property_id": "P100", "location": "Toronto", "type": "Apartment", ...}
-    return: number of records added
+    Upsert properties including price_per_night and coordinates (lat/lng).
     """
-    # 1. Generalize new_props to a list of dicts
     if isinstance(new_props, dict):
-        # Single property dict
         new_props = [new_props]
-
     if not new_props:
-        # No properties to add
         print("[LOG] No properties to add.")
         return 0
 
-    # 2. Batch create embeddings
     texts = [compose_property_text(p) for p in new_props]
-
-    # use convert_to_numpy=True to get numpy array directly, convert to float32 for SQLite BLOB storage
-    # otherwise it will be torch.Tensor (which is not serializable)
     embs = model.encode(texts, convert_to_numpy=True).astype(np.float32)
 
-    # 3. Create rows_data
-    rows_data = [
-        (
+    rows_data = []
+    for p, emb in zip(new_props, embs):
+        coords = (p.get("coordinates") or {})
+        lat = coords.get("lat", None)
+        lng = coords.get("lng", None)
+        price = p.get("price_per_night", None)
+
+        rows_data.append((
             p["property_id"],
             emb.tobytes(),
             p.get("location", ""),
             p.get("type", ""),
             ",".join(p.get("features", []) or []),
             ",".join(p.get("tags", []) or []),
-        )
-        for p, emb in zip(new_props, embs)
-    ]
+            float(price) if price is not None else None,
+            float(lat) if lat is not None else None,
+            float(lng) if lng is not None else None,
+        ))
 
-    # 4. Batch insert into database
     conn = sqlite3.connect(db_file)
-    ensure_table(conn)
+    ensure_table(conn) 
     conn.executemany(
         """
         INSERT OR REPLACE INTO property_embeddings
-        (property_id, embedding, location, type, features, tags)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """,
+        (property_id, embedding, location, type, features, tags, price_per_night, lat, lng)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
         rows_data,
     )
     conn.commit()
@@ -256,6 +252,7 @@ def add_properties(new_props, model, db_file=SQLITE_DB_FILE):
 
     print(f"[LOG] Upserted {len(rows_data)} record(s) into {db_file}.")
     return len(rows_data)
+
 
 
 def compose_property_text(property):
@@ -355,31 +352,13 @@ class SbertRecommender:
                 {
                     "property_id": self.properties[idx]["property_id"],
                     "similarity": float(similarities[i]),
-                    "price_per_night": self.properties[idx]["price_per_night"],
-                    "location": self.properties[idx]["location"],
-                    "type": self.properties[idx]["type"],
-                    "features": self.properties[idx]["features"],
-                    "tags": self.properties[idx]["tags"],   
+                    "price_per_night": self.properties[idx].get("price_per_night"),
+                    "location": self.properties[idx].get("location"),
+                    "type": self.properties[idx].get("type"),
+                    "features": self.properties[idx].get("features"),
+                    "tags": self.properties[idx].get("tags"),
+                    "coordinates": (self.properties[idx].get("coordinates") or {}),
                 }
             )
         return results
 
-
-################## Examples ################
-if __name__ == "__main__":
-    with open(PROPERTIES_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    properties = data.get("properties", [])
-
-    user = {
-        "user_id": "u001",
-        "preferred_environment": ["Europe", "Ocean", "Luxury"],
-        "budget": "500",
-    }
-
-    init_embeddings_to_sqlite()
-
-    recommender = SbertRecommender(properties)
-    results = recommender.recommend_logic(user, top_n=5)
-    for r in results:
-        print(r)
