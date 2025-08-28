@@ -1,2 +1,8 @@
 numpy==2.1.3
 sentence-transformers==5.1.0
+streamlit
+pandas
+requests
+python-dotenv
+sentence-transformers
+numpy

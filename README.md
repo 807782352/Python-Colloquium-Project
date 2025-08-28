@@ -1,12 +1,11 @@
-
 # Python-Colloquium-Project
 
 ## Overview
-This is a Python command-line application that simulates a smart vacation rental platform (like Airbnb) with:
-- User login/signup and profile management
+A smart vacation rental platform (like Airbnb) with:
+- Streamlit UI for user login/signup, dashboard, and property recommendations
 - Persistent user and property data (JSON/SQLite)
-- Personalized property recommendations using vector embeddings
-- An AI-powered travel agent chat (using OpenRouter LLM API)
+- Personalized property recommendations using SBERT vector search
+- AI-powered travel agent chat (OpenRouter LLM API)
 
 ---
 
@@ -15,161 +14,114 @@ This is a Python command-line application that simulates a smart vacation rental
 ```
 Python-Colloquium-Project/
 │
-├── main.py                        # Main CLI app: user management, property search, AI chat
-├── requirements.txt               # All required Python packages
-├── .env                           # Stores your OpenRouter API key
-├── README.md                      # This file
+├── main.py, core.py, cli.py           # CLI and core logic
+├── requirements.txt                   # Python dependencies
+├── .env                               # OpenRouter API key
+├── README.md                          # Project documentation
 │
 ├── datasets/
-│   ├── users.json                 # Persistent user data
-│   └── property_listings.json     # Property listings data
+│   ├── users.json                     # User data
+│   └── property_listings.json         # Property data
 │
-├── models/
-│   ├── properties_listings.py     # (Optional/for future) Data models
-│   └── users.py                   # (Optional/for future) Data models
+├── models/                            # Data models (optional)
+├── core/                              # User/property management logic
+├── Gr8-Summer-Stays/                  # Streamlit UI app
+│   ├── app.py, ui.py, backend_logic.py
+│   └── requirements.txt
 │
-└── Vector embeddings/
-	 └── create_embeddings.py       # Embedding creation/search logic
-	 └── property_vector_db.sqlite  # SQLite DB for property embeddings (auto-generated)
+├── recommenders/
+│   ├── sbert_recommender.py           # SBERT vector search logic
+│   ├── property_vector_db.sqlite      # SQLite DB for property embeddings
+│   └── sbert_models/saved_model/      # Pretrained SBERT model files
 ```
 
 ---
 
-## Logic and Flow
+## Features & Flow
 
 ### 1. User Management
-- Users can **sign up** (with user ID, name, group size, preferred environment, budget, password)
-- User data is stored in `datasets/users.json` (hashed passwords)
-- **Login** authenticates users and loads their profile
-- Users can view, edit, or delete their profile
+- Sign up/login with user ID, name, group size, preferred environment, budget, password
+- Passwords are securely hashed
+- Edit/view profile in the dashboard
 
 ### 2. Property Listings & Embeddings
-- Property data is in `datasets/property_listings.json`
-- `Vector embeddings/create_embeddings.py` loads properties, generates vector embeddings (using `sentence-transformers`), and stores them in a SQLite DB (`property_vector_db.sqlite`)
-- Embeddings are used for fast, semantic property recommendations
+- Properties stored in `datasets/property_listings.json`
+- Embeddings generated using SBERT and stored in `property_vector_db.sqlite`
+- Fast, semantic recommendations using vector search
 
-### 3. Recommendations
-- After login, users can:
-  - View recommended properties (vector search based on their preferences)
-  - See short, personalized descriptions for each property
+### 3. Recommendations (Streamlit UI)
+- After login, users see personalized property recommendations
+- Recommendations use SBERT vector search on precomputed embeddings in SQLite DB
+- Properties are ranked by similarity to user preferences (preferred environments, budget)
 
 ### 4. AI Travel Agent Chat
-- Users can chat with an AI travel agent (OpenRouter LLM, e.g., mistralai/mistral-large)
-- The chat can:
-  - Answer travel questions
-  - Suggest properties
-  - Provide weather info, itinerary help, etc.
-- API key is loaded from `.env` (never hardcoded)
+- Chat with an AI travel agent (OpenRouter LLM)
+- Get travel advice, property suggestions, itinerary help, etc.
+- API key loaded from `.env` (never hardcoded)
 
 ---
 
 ## Setup Instructions
 
 1. **Clone the repository**
-	```sh
-	git clone <repo-url>
+   ```sh
+   git clone <repo-url>
+   ```
+2. **Install dependencies**
+   ```sh
+   pip install -r requirements.txt
+   ```
+3. **Create and add your OpenRouter/OpenAI API key**
+    For OpenRouter: Go to https://openrouter.ai/ and sign up for an account. Generate an API key from your dashboard.
 
-### 3. Recommendation Logic (How Properties Are Recommended)
-
-#### a. Vector Embedding Approach
-- Each property is represented as a vector embedding using the `sentence-transformers` model (`all-MiniLM-L6-v2`).
-- Embeddings are generated from a concatenation of property fields: location, type, features, and tags.
-- All property embeddings are stored in a SQLite database for fast similarity search.
-
-#### b. User Query Construction
-- When a user logs in, their preferences (preferred environment, group size, budget) are combined into a single query string.
-- Example: If a user prefers "Beach Resort" and has group size 4, budget 300, the query might be: `"Beach Resort 4 300"`.
-
-#### c. Semantic Search (Vector Similarity)
-- The user's query is embedded using the same model.
-- The app computes cosine similarity between the user query embedding and all property embeddings in the database.
-- The top-k most similar properties are selected as recommendations.
-
-#### d. Displaying Recommendations
-- For each recommended property, the app shows:
-	- Property ID, location, type, features, tags, similarity score
-	- A short, personalized description (generated by a template or LLM)
-
-#### e. Why This Works
-- This approach allows for flexible, semantic matching: even if the user's query doesn't exactly match property text, similar concepts are matched (e.g., "cozy hut" ≈ "cabin").
-- The system is robust to new property types, features, or user preferences.
-
-#### f. Custom Search
-- Users can also enter free-form prompts (e.g., "I want a romantic mountain cabin for 2 under $200")
-- The app extracts keywords and runs the same vector search logic for recommendations.
+     ```
+     OPENROUTER_API_KEY=sk-...
+     # or for OpenAI
+     OPENAI_API_KEY=sk-...
+     ```
+4. **(First time only) Generate property embeddings**
+   ```sh
+   python recommenders/sbert_recommender.py
+   ```
+   This creates `property_vector_db.sqlite` for fast recommendations.
+5. **Run the Streamlit UI**
+   ```sh
+   streamlit run Gr8-Summer-Stays/app.py
+   ```
 
 ---
 
-// ...existing code...
+## How to Use
 
-3. **Install dependencies**
-	```sh
-	pip install -r requirements.txt
-	```
-
-4. **Add your OpenRouter API key**
-	- Copy your API key to `.env` as:
-	  ```
-	  OPENROUTER_API_KEY=sk-...
-	  ```
-
-5. **(First time only) Generate property embeddings**
-	```sh
-	python Vector\ embeddings/create_embeddings.py
-	```
-	This creates `property_vector_db.sqlite` for fast recommendations.
+- **Sign up or log in**
+- **Dashboard:**
+  - View/edit profile
+  - See recommended properties (vector search)
+  - Save properties
+  - Chat with AI travel agent
 
 ---
 
-## How to Use the App
-
-1. **Start the CLI app**
-	```sh
-	python main.py
-	```
-
-2. **Sign up or log in**
-	- New users: choose sign up, enter details
-	- Existing users: log in with user ID and password
-
-3. **User Dashboard**
-	- View/edit/delete your profile
-	- View property listings and recommendations
-	- Chat with the AI travel agent
-
-4. **Property Recommendations**
-	- Choose "Get recommended options" to see top matches
-	- Each property shows a short, personalized description
-
-5. **AI Travel Agent Chat**
-	- Choose "Chat with the AI travel agent"
-	- Ask travel questions, get property suggestions, or plan your trip interactively
-
----
-
-## Navigation Tips
-
-- All data is persistent (users, properties, embeddings)
-- If you add new properties, re-run `create_embeddings.py` to update the vector DB
-- If you change your API key, update `.env`
-- For troubleshooting, check the logs printed in the terminal
+## Recommendation Logic
+- User preferences (environments, budget) are embedded using SBERT
+- Vector search finds the most similar properties from the SQLite DB
+- Top-N properties are shown, ranked by similarity
 
 ---
 
 ## Requirements
-
-See `requirements.txt` for all dependencies:
 - requests
 - python-dotenv
 - sentence-transformers
 - numpy
+- streamlit
 
 ---
 
 ## Notes
-- The project is modular: you can extend property data, add new models, or swap the LLM easily
 - All sensitive info (API keys) is kept in `.env` (never commit this file)
-- The app is designed for learning, prototyping, and demo purposes
+- If you add new properties, rerun the embedding script to update the DB
+- The app is modular and easy to extend
 
 ---
 
@@ -177,56 +129,16 @@ See `requirements.txt` for all dependencies:
 
 ```
 $ python main.py
-==============================
-		SIGN UP
-==============================
-Enter User ID: alice
-Enter Name: Alice
-Enter Group Size: 2
-Enter Preferred Environment(s) (comma-separated): Beach, Cozy
-Enter Budget: 150
-Create Password: ******
-✅ Sign up successful! Welcome Alice. You can now log in.
-
----
-		USER DASHBOARD
----
-1. View User Profile
-2. View Property Listings
-3. Logout
----
-Enter your choice: 2
-
---- PROPERTY LISTINGS ---
-1. Get recommended options according to your preferences
-2. Chat with the AI travel agent to plan your vacation
----
-Enter your choice: 1
-
-Recommended Properties:
-Property ID: P00123 | Similarity: 0.82
-  Location: Santorini, Greece
-  Type: Beach Villa
-  Features: Ocean View, Pool, WiFi, Kitchen
-  Tags: romantic, luxury, family
-  Description: A Beach Villa in Santorini, Greece with Ocean View, Pool, WiFi, Kitchen. Great for romantic, luxury, family. Enjoy comfort and adventure at $150 per night.
-...
+# ... Select mode: CLI or UI ...
+# For CLI: interact in the terminal
+# For UI: the app will launch Streamlit and open in your browser
+# Sign up, log in, view recommendations, chat with AI
 ```
-
-Note: Do `pip install -r requirements.txt` under the root to install relavant modules before running the code!
-
-
 
 ---
 ## Acknowledgments
-
-Parts of the initial code framework were generated with the assistance of AI tools, including GitHub Copilot and ChatGPT.  
-However, the overall system design, logic development, code review, and subsequent modifications were entirely performed by the project team members.
-
-
+Parts of the initial code framework were generated with the assistance of AI tools, including GitHub Copilot and ChatGPT. The overall system design, logic development, and code review were performed by the project team.
 
 ## References
-
-- Reimers, Nils, and Iryna Gurevych. *Sentence Transformers: Compute Embeddings*. SBERT.net, https://sbert.net/examples/sentence_transformer/applications/computing-embeddings/README.html. Accessed 26 Aug. 2025.
-
-- "Sentence Transformers Tutorial." *YouTube*, uploaded by HuggingFace, 14 May 2021, https://www.youtube.com/watch?app=desktop&v=nZ5j289WN8g. Accessed 26 Aug. 2025.
+- [SBERT Documentation](https://sbert.net/examples/sentence_transformer/applications/computing-embeddings/README.html)
+- [Sentence Transformers Tutorial (YouTube)](https://www.youtube.com/watch?app=desktop&v=nZ5j289WN8g)

@@ -9,7 +9,7 @@
             "Forest",
             "Mangroove Forest"
         ],
-        "budget": 250,
+        "budget": 800,
         "password": "77981306d2e60bcff5e16d2b693d322cd25833d03a548134f20d5cd113f14cbc",
         "saved_property": [
             "P00001",
@@ -106,5 +106,90 @@
         ],
         "budget": 130,
         "password": "77981306d2e60bcff5e16d2b693d322cd25833d03a548134f20d5cd113f14cbc"
+    },
+    {
+        "user_id": "www",
+        "name": "ww",
+        "group_size": 3,
+        "preferred_environment": [
+            "winter room",
+            "hut"
+        ],
+        "budget": 200,
+        "password": "7c2ecd07f155648431e0f94b89247d713c5786e1e73e953f2fe7eca39534cd6d"
+    },
+    {
+        "user_id": "haha",
+        "name": "haha",
+        "group_size": 4,
+        "preferred_environment": [
+            "warm",
+            "humid"
+        ],
+        "budget": 100,
+        "password": "090b235e9eb8f197f2dd927937222c570396d971222d9009a9189e2b6cc0a2c1",
+        "saved_property": [
+            "P00001"
+        ]
+    },
+    {
+        "user_id": "tyty",
+        "name": "tyty",
+        "group_size": 1,
+        "preferred_environment": [
+            "hut"
+        ],
+        "budget": 100,
+        "password": "f57d7c9dbaf3861c00a4a6a724fe8b5383cb211afe1a9993c15409a4ca14ec7f"
+    },
+    {
+        "user_id": "ddd",
+        "name": "ddd",
+        "group_size": 1,
+        "preferred_environment": [
+            "dd"
+        ],
+        "budget": 1,
+        "password": "730f75dafd73e047b86acb2dbd74e75dcb93272fa084a9082848f2341aa1abb6"
+    },
+    {
+        "user_id": "fff",
+        "name": "fff",
+        "group_size": 1,
+        "preferred_environment": [
+            "fff"
+        ],
+        "budget": 1,
+        "password": "f284bdc3c1c9e24a494e285cb387c69510f28de51c15bb93179d9c7f28705398"
+    },
+    {
+        "user_id": "tt",
+        "name": "tt",
+        "group_size": 1,
+        "preferred_environment": [
+            "tt"
+        ],
+        "budget": 1,
+        "password": "0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82"
+    },
+    {
+        "user_id": "qq",
+        "name": "qq",
+        "group_size": 1,
+        "preferred_environment": [
+            "qq"
+        ],
+        "budget": 1,
+        "password": "d5ce2b19fbda14a25deac948154722f33efd37b369a32be8f03ec2be8ef7d3a5"
+    },
+    {
+        "user_id": "uu",
+        "name": "uu",
+        "group_size": 1,
+        "preferred_environment": [
+            "uu"
+        ],
+        "budget": 1,
+        "password": "5afab9a620f6f11284505be2fb9a975b4dccfdd30970dffc7ed875490160e4d0"
     }
 ]

@@ -1,3 +1,109 @@
+def recommend_properties_from_db(user, top_n=5, db_file=None, model_dir=None):
+    """
+    Recommend properties using precomputed embeddings in the SQLite DB, based on user preferences.
+    """
+    from sentence_transformers import SentenceTransformer, util
+    import numpy as np
+    import sqlite3
+    import json
+    # Use default paths if not provided
+    if db_file is None:
+        db_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "property_vector_db.sqlite"))
+    if model_dir is None:
+        model_dir = os.path.join(os.path.dirname(__file__), "sbert_models", "saved_model")
+    # Load model
+    model = SentenceTransformer(model_dir)
+    # Compose user query
+    preferred_env = user.get("preferred_environment", [])
+    user_text = "preferred_environment: " + ", ".join(preferred_env)
+    user_vector = model.encode([user_text], convert_to_numpy=True).astype(np.float32)[0]
+    # Connect to DB
+    conn = sqlite3.connect(db_file)
+    c = conn.cursor()
+    c.execute("SELECT property_id, embedding, location, type, features, tags FROM property_embeddings")
+    rows = c.fetchall()
+    conn.close()
+    properties = []
+    embeddings = []
+    for row in rows:
+        property_id, embedding_blob, location, type_, features, tags = row
+        emb = np.frombuffer(embedding_blob, dtype=np.float32)
+        properties.append({
+            "property_id": property_id,
+            "location": location,
+            "type": type_,
+            "features": features.split(",") if features else [],
+            "tags": tags.split(",") if tags else []
+        })
+        embeddings.append(emb)
+    if not embeddings:
+        return []
+    property_vectors = np.stack(embeddings)
+    similarities = util.cos_sim(user_vector, property_vectors)[0]
+    order = np.argsort(-similarities)[:top_n]
+    results = []
+    for i in order:
+        prop = properties[i]
+        results.append({
+            "property_id": prop["property_id"],
+            "similarity": float(similarities[i]),
+            "price_per_night": None,  # Add price if available from JSON
+            "location": prop["location"],
+            "type": prop["type"],
+            "features": prop["features"],
+            "tags": prop["tags"]
+        })
+    return results
+    """
+    Recommend properties using precomputed embeddings in the SQLite DB, based on user preferences.
+    """
+    from sentence_transformers import SentenceTransformer, util
+    import numpy as np
+    import sqlite3
+    import json
+    # Load model
+    model = SentenceTransformer(model_dir)
+    # Compose user query
+    preferred_env = user.get("preferred_environment", [])
+    user_text = "preferred_environment: " + ", ".join(preferred_env)
+    user_vector = model.encode([user_text], convert_to_numpy=True).astype(np.float32)[0]
+    # Connect to DB
+    conn = sqlite3.connect(db_file)
+    c = conn.cursor()
+    c.execute("SELECT property_id, embedding, location, type, features, tags FROM property_embeddings")
+    rows = c.fetchall()
+    conn.close()
+    properties = []
+    embeddings = []
+    for row in rows:
+        property_id, embedding_blob, location, type_, features, tags = row
+        emb = np.frombuffer(embedding_blob, dtype=np.float32)
+        properties.append({
+            "property_id": property_id,
+            "location": location,
+            "type": type_,
+            "features": features.split(",") if features else [],
+            "tags": tags.split(",") if tags else []
+        })
+        embeddings.append(emb)
+    if not embeddings:
+        return []
+    property_vectors = np.stack(embeddings)
+    similarities = util.cos_sim(user_vector, property_vectors)[0]
+    order = np.argsort(-similarities)[:top_n]
+    results = []
+    for i in order:
+        prop = properties[i]
+        results.append({
+            "property_id": prop["property_id"],
+            "similarity": float(similarities[i]),
+            "price_per_night": None,  # Add price if available from JSON
+            "location": prop["location"],
+            "type": prop["type"],
+            "features": prop["features"],
+            "tags": prop["tags"]
+        })
+    return results
 # This script loads property listings, generates embeddings, and stores them in a vector database for later querying.
 
 from sentence_transformers import SentenceTransformer, util
