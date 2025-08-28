@@ -31,7 +31,7 @@ def recommend_properties_from_db(user, top_n=5, db_file=None, model_dir=None):
 
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
-    ensure_table(conn)  # 迁移老表，避免 SELECT 报错
+    ensure_table(conn) 
     c.execute("""
         SELECT property_id, embedding, location, type, features, tags, price_per_night, lat, lng
         FROM property_embeddings
