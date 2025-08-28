@@ -5,20 +5,47 @@ def login_menu(user):
         print("\n" + "="*30)
         print("      USER DASHBOARD")
         print("="*30)
-        print("1. View User Profile")
+        print("1. User Profile Options")
         print("2. View Recommended Properties")
         print("3. View Saved Properties")
         print("4. Logout")
         print("="*30)
         choice = input("Enter your choice: ")
         if choice == '1':
-            view_user_profile(user)
+            user_profile_options_menu(user)
         elif choice == '2':
             recommended_properties_menu(user)
         elif choice == '3':
             show_saved_properties(user)
         elif choice == '4':
             print("Logging out...")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+# --- User Profile Options Menu ---
+def user_profile_options_menu(user):
+    while True:
+        print("\n" + "*"*30)
+        print("   USER PROFILE OPTIONS")
+        print("*"*30)
+        print("1. View Profile")
+        print("2. Edit Profile")
+        print("3. Delete Profile")
+        print("4. Back")
+        print("*"*30)
+        sub_choice = input("Enter your choice: ")
+        if sub_choice == '1':
+            view_user_profile(user)
+        elif sub_choice == '2':
+            edit_user_profile(user)
+            # After editing, stay in this menu
+        elif sub_choice == '3':
+            delete_user_profile(user)
+            # After deleting, go to main menu
+            main_menu()
+            break
+        elif sub_choice == '4':
             break
         else:
             print("Invalid choice. Please try again.")
@@ -312,3 +339,36 @@ def query_openrouter_deepseek_llm(prompt):
             return f"[ERROR] LLM API error: {response.status_code} {response.text}"
     except Exception as e:
         return f"[ERROR] LLM API exception: {e}"
+
+# --- Edit User Profile ---
+def edit_user_profile(user):
+    print("\nEditing Profile:")
+    name = input(f"Name [{user['name']}]: ") or user['name']
+    group_size = input(f"Group Size [{user['group_size']}]: ") or user['group_size']
+    preferred_env = input(f"Preferred Environment(s) (comma-separated) [{', '.join(user['preferred_environment'])}]: ")
+    if preferred_env:
+        preferred_environment = [e.strip() for e in preferred_env.split(',') if e.strip()]
+    else:
+        preferred_environment = user['preferred_environment']
+    budget = input(f"Budget [{user['budget']}]: ") or user['budget']
+    user['name'] = name
+    user['group_size'] = group_size
+    user['preferred_environment'] = preferred_environment
+    user['budget'] = budget
+    users = load_users()
+    for u in users:
+        if u['user_id'] == user['user_id']:
+            u.update(user)
+    save_users(users)
+    print("✅ Profile updated!")
+
+# --- Delete User Profile ---
+def delete_user_profile(user):
+    confirm = input("Are you sure you want to delete your profile? This cannot be undone. (y/n): ")
+    if confirm.lower() == 'y':
+        users = load_users()
+        users = [u for u in users if u['user_id'] != user['user_id']]
+        save_users(users)
+        print("✅ Profile deleted. Returning to main menu.")
+    else:
+        print("Profile deletion cancelled.")
