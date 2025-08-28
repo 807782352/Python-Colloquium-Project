@@ -109,13 +109,13 @@
     },
     {
         "user_id": "www",
-        "name": "ww",
-        "group_size": 3,
+        "name": "Manav",
+        "group_size": "1",
         "preferred_environment": [
             "winter room",
             "hut"
         ],
-        "budget": 200,
+        "budget": "100",
         "password": "7c2ecd07f155648431e0f94b89247d713c5786e1e73e953f2fe7eca39534cd6d"
     },
     {
